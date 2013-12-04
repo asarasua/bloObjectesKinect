@@ -3,6 +3,7 @@
 #include "ofMain.h"
 #include "ofxOpenCv.h"
 #include "ofxKinect.h"
+#include "ofxGui.h"
 
 // uncomment this to read from two kinects simultaneously
 //#define USE_TWO_KINECTS
@@ -23,6 +24,12 @@ public:
 	void mouseReleased(int x, int y, int button);
 	void windowResized(int w, int h);
     float distanceToBackground (int kinectX, int kinectY);
+    
+    //GUI control
+    void floorThresholdChanged();
+    void handsThresholdChanged();
+    void objectsBlobSizeChanged();
+    void handsBlobSizeChanged();
 	
 	ofxKinect kinect;
 	
@@ -48,14 +55,14 @@ public:
     ofVec3f background_v0;
 	
 	bool bThreshWithOpenCV;
-	bool bDrawPointCloud;
-	
-    //Depth distance thresholds
-	int floorNearThreshold;
-	int floorFarThreshold;
-    int handsNearThreshold;
-    int handsFarThreshold;
+	bool bDrawDetectors;
     
+    //GUI
+    ofxPanel gui;
+    ofxVec2Slider floorThresholdSlider;
+    ofxVec2Slider handsThresholdSlider;
+    ofxVec2Slider objectsBlobSize;
+    ofxVec2Slider handsBlobSize;
 	
 	int angle;
 	
