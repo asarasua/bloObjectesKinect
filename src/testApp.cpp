@@ -133,8 +133,8 @@ void testApp::draw() {
                             + kinect.getWorldCoordinateAt(xKinectTopRight, yKinectTopRight).distance(kinect.getWorldCoordinateAt(xKinectTopLeft, yKinectTopLeft));
             
             float x = ofMap(objectsFinder.blobs[i].centroid.x, 0, objectsFinder.getWidth(), ofGetWindowWidth()/2, ofGetWindowWidth());
-            float y = ofMap(objectsFinder.blobs[i].centroid.y, 0, objectsFinder.getHeight(), 0, ofGetWindowHeight()/2);
-                            
+            float y = ofMap(objectsFinder.blobs[i].centroid.y, 0, objectsFinder.getHeight(), 0, ofGetWindowHeight()/2);            
+            
             ofDrawBitmapString(ofToString(realArea), x, y);
         }
         
