@@ -2,6 +2,7 @@
 
 #include "ofMain.h"
 #include "ofxOpenCv.h"
+#include "ofxCv.h"
 #include "ofxKinect.h"
 #include "ofxGui.h"
 
@@ -24,12 +25,6 @@ public:
 	void mouseReleased(int x, int y, int button);
 	void windowResized(int w, int h);
     float distanceToBackground (int kinectX, int kinectY);
-    
-    //GUI control
-    void floorThresholdChanged();
-    void handsThresholdChanged();
-    void objectsBlobSizeChanged();
-    void handsBlobSizeChanged();
 	
 	ofxKinect kinect;
 	
@@ -37,17 +32,11 @@ public:
 	ofxKinect kinect2;
 #endif
 	
-	//ofxCvColorImage colorImg;
-    
     ofxCvGrayscaleImage objectsImage;
     ofxCvGrayscaleImage handsImage;
 	
-	//ofxCvGrayscaleImage grayImage; // grayscale depth image
-//	ofxCvGrayscaleImage grayThreshNear; // the near thresholded image
-//	ofxCvGrayscaleImage grayThreshFar; // the far thresholded image
-//	
-	ofxCvContourFinder objectsFinder;
-    ofxCvContourFinder handsFinder;
+    ofxCv::ContourFinder objectsFinder;
+    ofxCv::ContourFinder handsFinder;
     
     bool bCalibratingBackground;
     vector<ofVec3f> backgroundPoints;
@@ -55,7 +44,7 @@ public:
     ofVec3f background_v0;
 	
 	bool bThreshWithOpenCV;
-	bool bDrawDetectors;
+	//bool bDrawDetectors;
     
     //GUI
     ofxPanel gui;
@@ -63,6 +52,7 @@ public:
     ofxVec2Slider handsThresholdSlider;
     ofxVec2Slider objectsBlobSize;
     ofxVec2Slider handsBlobSize;
+    ofxToggle drawDetectors;
 	
 	int angle;
 	

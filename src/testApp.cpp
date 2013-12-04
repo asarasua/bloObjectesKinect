@@ -1,5 +1,7 @@
 #include "testApp.h"
 
+using namespace ofxCv;
+using namespace cv;
 
 //--------------------------------------------------------------
 void testApp::setup() {
@@ -29,14 +31,11 @@ void testApp::setup() {
 	kinect2.open();
 #endif
 	
+    //WINDOW SIZE
+    ofSetWindowShape(kinect.width*2, kinect.height*2);
+    
     objectsImage.allocate(kinect.width, kinect.height);
     handsImage.allocate(kinect.width, kinect.height);
-	//colorImg.allocate(kinect.width, kinect.height);
-	//grayImage.allocate(kinect.width, kinect.height);
-//	grayThreshNear.allocate(kinect.width, kinect.height);
-//	grayThreshFar.allocate(kinect.width, kinect.height);
-	
-    //threshold = 300;
     
 	bThreshWithOpenCV = true;
 	
@@ -45,14 +44,12 @@ void testApp::setup() {
 	// zero the tilt on startup
 	angle = 0;
 	kinect.setCameraTiltAngle(angle);
-	
-	// start from the front
-	bDrawDetectors = false;
     
     bCalibratingBackground = false;
     
     //GUI
     gui.setup();
+    gui.add(drawDetectors.setup("detectors", false));
     gui.add(floorThresholdSlider.setup("floorThreshold", ofVec2f(10, 50), ofVec2f(0, 5), ofVec2f(100, 150)));
     gui.add(handsThresholdSlider.setup("handsThreshold", ofVec2f(51, 100), ofVec2f(0, 5), ofVec2f(100, 200)));
     gui.add(objectsBlobSize.setup("objectsBlobSize", ofVec2f(1000, 10000), ofVec2f(0, 5), ofVec2f(10000, 20000)));
@@ -102,8 +99,14 @@ void testApp::update() {
 		// find contours which are between the size of 20 pixels and 1/3 the w*h pixels.
 		// also, find holes is set to true so we will get interior contours as well....
 		//contourFinder.findContours(grayImage, 10, (kinect.width*kinect.height)/2, 20, false);
-        objectsFinder.findContours(objectsImage, objectsBlobSize->x, objectsBlobSize->y, 5, false);
-        handsFinder.findContours(handsImage, handsBlobSize->x, handsBlobSize->y, 5, false);
+        objectsFinder.setMinArea(objectsBlobSize->x);
+        objectsFinder.setMaxArea(objectsBlobSize->y);
+        objectsFinder.findContours(objectsImage);
+        
+        handsFinder.setMinArea(handsBlobSize->x);
+        handsFinder.setMaxArea(handsBlobSize->y);
+        handsFinder.findContours(handsImage);
+        
 	}
 	
 #ifdef USE_TWO_KINECTS
@@ -116,47 +119,71 @@ void testApp::draw() {
 	
 	ofSetColor(255, 255, 255);
 	
-	if(bDrawDetectors) {
+	if(drawDetectors) {
+        //OBJECTS
+        //Image
         ofSetColor(0, 255, 0);
-        objectsImage.draw(ofGetWindowWidth()/2, 0, ofGetWindowWidth()/2, ofGetWindowHeight()/2);
-        objectsFinder.draw(ofGetWindowWidth()/2, 0, ofGetWindowWidth()/2, ofGetWindowHeight()/2);
-        ofSetColor(255, 0, 0);
-        for (int i = 0; i < objectsFinder.nBlobs; i++) {
-            float xKinectBottomLeft = ofMap(objectsFinder.blobs[i].boundingRect.getBottomLeft().x, 0, objectsFinder.getWidth(), 0, kinect.width);
-            float yKinectBottomLeft = ofMap(objectsFinder.blobs[i].boundingRect.getBottomLeft().y, 0, objectsFinder.getHeight(), 0, kinect.height);
-            float xKinectTopLeft = ofMap(objectsFinder.blobs[i].boundingRect.getTopLeft().x, 0, objectsFinder.getWidth(), 0, kinect.width);
-            float yKinectTopLeft = ofMap(objectsFinder.blobs[i].boundingRect.getTopLeft().y, 0, objectsFinder.getHeight(), 0, kinect.height);
-            float xKinectTopRight = ofMap(objectsFinder.blobs[i].boundingRect.getTopRight().x, 0, objectsFinder.getWidth(), 0, kinect.width);
-            float yKinectTopRight = ofMap(objectsFinder.blobs[i].boundingRect.getTopRight().y, 0, objectsFinder.getHeight(), 0, kinect.height);
+        objectsImage.draw(kinect.width, 0);
+        
+        //Detector
+        ofPushMatrix();
+        ofSetLineWidth(2);
+        ofSetColor(0, 0, 255);
+        ofTranslate(kinect.width, 0);
+        objectsFinder.draw();
+        ofPopMatrix();
+        
+        for (int i = 0; i < objectsFinder.size(); ++i) {
+            vector<cv::Point> quads = objectsFinder.getFitQuad(i);
             
-            float realArea = kinect.getWorldCoordinateAt(xKinectBottomLeft, yKinectBottomLeft).distance(kinect.getWorldCoordinateAt(xKinectTopLeft, yKinectTopLeft))
-                            + kinect.getWorldCoordinateAt(xKinectTopRight, yKinectTopRight).distance(kinect.getWorldCoordinateAt(xKinectTopLeft, yKinectTopLeft));
+            float realArea = kinect.getWorldCoordinateAt(quads[0].x, quads[0].y).distance(kinect.getWorldCoordinateAt(quads[1].x, quads[1].y))
+            + kinect.getWorldCoordinateAt(quads[1].x, quads[1].y).distance(kinect.getWorldCoordinateAt(quads[2].x, quads[2].y));
             
-            float x = ofMap(objectsFinder.blobs[i].centroid.x, 0, objectsFinder.getWidth(), ofGetWindowWidth()/2, ofGetWindowWidth());
-            float y = ofMap(objectsFinder.blobs[i].centroid.y, 0, objectsFinder.getHeight(), 0, ofGetWindowHeight()/2);            
+            float x = ofMap(objectsFinder.getCentroid(i).x, 0, objectsImage.width, kinect.width, 2*kinect.width);
+            float y = ofMap(objectsFinder.getCentroid(i).y, 0, objectsImage.width, 0, kinect.width);
             
             ofDrawBitmapString(ofToString(realArea), x, y);
         }
         
+        //HANDS
+        //Image
         ofSetColor(255, 0, 0);
-        handsImage.draw(ofGetWindowWidth()/2, ofGetWindowHeight()/2, ofGetWindowWidth()/2, ofGetWindowHeight()/2);
-        handsFinder.draw(ofGetWindowWidth()/2, ofGetWindowHeight()/2, ofGetWindowWidth()/2, ofGetWindowHeight()/2);
+        handsImage.draw(kinect.width, kinect.height);
+        
+        //Detector
+        ofPushMatrix();
+        ofSetLineWidth(2);
+        ofSetColor(0, 0, 255);
+        ofTranslate(kinect.width, kinect.height);
+        handsFinder.draw();
+        ofPopMatrix();
+        
+        for (int i = 0; i < handsFinder.size(); ++i) {
+            vector<cv::Point> quads = handsFinder.getFitQuad(i);
+            
+            float realArea = kinect.getWorldCoordinateAt(quads[0].x, quads[0].y).distance(kinect.getWorldCoordinateAt(quads[1].x, quads[1].y))
+            + kinect.getWorldCoordinateAt(quads[1].x, quads[1].y).distance(kinect.getWorldCoordinateAt(quads[2].x, quads[2].y));
+            
+            float x = ofMap(handsFinder.getCentroid(i).x, 0, handsImage.width, kinect.width, 2*kinect.width);
+            float y = ofMap(handsFinder.getCentroid(i).y, 0, handsImage.width, 0, kinect.width);
+            
+            ofDrawBitmapString(ofToString(realArea), x, y);
+        }
     } else {
 		// draw from the live kinect
 		kinect.drawDepth(0, 0, ofGetWindowWidth(), ofGetWindowHeight());
         int kinectMouseX = ofMap(ofGetMouseX(), 0, ofGetWindowWidth(), 0, kinect.getWidth());
         int kinectMouseY = ofMap(ofGetMouseY(), 0, ofGetWindowHeight(), 0, kinect.getHeight());
         ofSetColor(255, 0, 0);
-        if (backgroundPoints.size() == 3){
+        
+        //Info over mouse
+        if (backgroundPoints.size() == 3 && ofGetMouseX() > 0 && ofGetMouseX() < ofGetWindowWidth() && ofGetMouseY() > 0 && ofGetMouseY() << ofGetWindowHeight()){
             ofDrawBitmapString(ofToString(distanceToBackground(kinectMouseX, kinectMouseY)), ofGetMouseX(), ofGetMouseY());
         }
-        else{
+        else if (ofGetMouseX() > 0 && ofGetMouseX() < ofGetWindowWidth() && ofGetMouseY() > 0 && ofGetMouseY() << ofGetWindowHeight()){
             ofDrawBitmapString(ofToString(kinect.getWorldCoordinateAt(kinectMouseX, kinectMouseY)), ofGetMouseX(), ofGetMouseY());
         }
         ofSetColor(255, 255, 255);
-		
-		
-//		contourFinder.draw(10, 320, 400, 300);
 		
 #ifdef USE_TWO_KINECTS
 		kinect2.draw(420, 320, 400, 300);
@@ -164,7 +191,7 @@ void testApp::draw() {
 	}
 	
 	// draw instructions
-	ofSetColor(255, 255, 255);
+	ofSetColor(255, 0, 0);
 	stringstream reportStream;
     
 	if (bCalibratingBackground){
@@ -179,11 +206,8 @@ void testApp::draw() {
             reportStream << "Note: this is a newer Xbox Kinect or Kinect For Windows device," << endl
             << "motor / led / accel controls are not currently supported" << endl << endl;
         }
-        reportStream << "press p to switch between images and point cloud, rotate the point cloud with the mouse" << endl
-        << "using opencv threshold = " << bThreshWithOpenCV <<" (press spacebar)" << endl
-        //	<< "set far threshold " << floorFarThreshold << " (press: < >) num blobs found " << contourFinder.nBlobs
-        << "press b to calibrate bacground"
-        << ", fps: " << ofGetFrameRate() << endl
+        reportStream << "press b to calibrate background" << endl
+        << "fps: " << ofGetFrameRate() << endl
         << "press c to close the connection and o to open it again, connection is: " << kinect.isConnected() << endl;
         if(kinect.hasCamTiltControl()) {
             reportStream << "press UP and DOWN to change the tilt angle: " << angle << " degrees" << endl
@@ -239,10 +263,6 @@ void testApp::keyPressed (int key) {
 			bThreshWithOpenCV = !bThreshWithOpenCV;
 			break;
 			
-		case'p':
-			bDrawDetectors = !bDrawDetectors;
-			break;
-    
 		case 'w':
 			kinect.enableDepthNearValueWhite(!kinect.isDepthNearValueWhite());
 			break;
