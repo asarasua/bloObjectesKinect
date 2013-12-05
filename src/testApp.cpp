@@ -32,7 +32,7 @@ void testApp::setup() {
 #endif
 	
     //WINDOW SIZE
-    ofSetWindowShape(kinect.width*2, kinect.height*2);
+    //ofSetWindowShape(kinect.width*2, kinect.height*2);
     
     objectsImage.allocate(kinect.width, kinect.height);
     handsImage.allocate(kinect.width, kinect.height);
@@ -123,13 +123,14 @@ void testApp::draw() {
         //OBJECTS
         //Image
         ofSetColor(0, 255, 0);
-        objectsImage.draw(kinect.width, 0);
+        objectsImage.draw(ofGetWindowWidth()/2, 0, ofGetWindowWidth()/2, ofGetWindowHeight()/2);
         
         //Detector
         ofPushMatrix();
         ofSetLineWidth(2);
         ofSetColor(0, 0, 255);
-        ofTranslate(kinect.width, 0);
+        ofTranslate(ofGetWindowWidth()/2, 0);
+        ofScale((.5 * float(ofGetWindowWidth())) / float (kinect.width), (.5 * float(ofGetWindowHeight())) / float (kinect.height));
         objectsFinder.draw();
         ofPopMatrix();
         
@@ -139,8 +140,8 @@ void testApp::draw() {
             float realArea = kinect.getWorldCoordinateAt(quads[0].x, quads[0].y).distance(kinect.getWorldCoordinateAt(quads[1].x, quads[1].y))
             + kinect.getWorldCoordinateAt(quads[1].x, quads[1].y).distance(kinect.getWorldCoordinateAt(quads[2].x, quads[2].y));
             
-            float x = ofMap(objectsFinder.getCentroid(i).x, 0, objectsImage.width, kinect.width, 2*kinect.width);
-            float y = ofMap(objectsFinder.getCentroid(i).y, 0, objectsImage.width, 0, kinect.width);
+            float x = ofMap(objectsFinder.getCentroid(i).x, 0, objectsImage.width, ofGetWindowWidth()/2, ofGetWindowWidth());
+            float y = ofMap(objectsFinder.getCentroid(i).y, 0, objectsImage.height, 0, ofGetWindowHeight()/2);
             
             ofDrawBitmapString(ofToString(realArea), x, y);
         }
@@ -148,13 +149,14 @@ void testApp::draw() {
         //HANDS
         //Image
         ofSetColor(255, 0, 0);
-        handsImage.draw(kinect.width, kinect.height);
+        handsImage.draw(ofGetWindowWidth()/2, ofGetWindowHeight()/2, ofGetWindowWidth()/2, ofGetWindowHeight()/2);
         
         //Detector
         ofPushMatrix();
         ofSetLineWidth(2);
         ofSetColor(0, 0, 255);
-        ofTranslate(kinect.width, kinect.height);
+        ofTranslate(ofGetWindowWidth()/2, ofGetWindowHeight()/2);
+        ofScale((.5 * float(ofGetWindowWidth())) / float (kinect.width), (.5 * float(ofGetWindowHeight())) / float (kinect.height));
         handsFinder.draw();
         ofPopMatrix();
         
@@ -164,8 +166,8 @@ void testApp::draw() {
             float realArea = kinect.getWorldCoordinateAt(quads[0].x, quads[0].y).distance(kinect.getWorldCoordinateAt(quads[1].x, quads[1].y))
             + kinect.getWorldCoordinateAt(quads[1].x, quads[1].y).distance(kinect.getWorldCoordinateAt(quads[2].x, quads[2].y));
             
-            float x = ofMap(handsFinder.getCentroid(i).x, 0, handsImage.width, kinect.width, 2*kinect.width);
-            float y = ofMap(handsFinder.getCentroid(i).y, 0, handsImage.width, 0, kinect.width);
+            float x = ofMap(handsFinder.getCentroid(i).x, 0, handsImage.width, ofGetWindowWidth()/2, ofGetWindowWidth());
+            float y = ofMap(handsFinder.getCentroid(i).y, 0, handsImage.width, ofGetWindowHeight()/2, ofGetWindowHeight());
             
             ofDrawBitmapString(ofToString(realArea), x, y);
         }
