@@ -5,6 +5,7 @@
 #include "ofxCv.h"
 #include "ofxKinect.h"
 #include "ofxGui.h"
+#include "ObjectTracker.h"
 
 // uncomment this to read from two kinects simultaneously
 //#define USE_TWO_KINECTS
@@ -37,6 +38,8 @@ public:
 	
     ofxCv::ContourFinder objectsFinder;
     ofxCv::ContourFinder handsFinder;
+    
+    ObjectTracker objectTracker;
     
     bool bCalibratingBackground;
     vector<ofVec3f> backgroundPoints;

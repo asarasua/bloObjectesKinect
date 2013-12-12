@@ -103,6 +103,8 @@ void testApp::update() {
         objectsFinder.setMaxArea(objectsBlobSize->y);
         objectsFinder.findContours(objectsImage);
         
+        ObjectTracker().update(objectsFinder, kinect);
+        
         handsFinder.setMinArea(handsBlobSize->x);
         handsFinder.setMaxArea(handsBlobSize->y);
         handsFinder.findContours(handsImage);

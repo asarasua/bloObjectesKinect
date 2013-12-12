@@ -9,13 +9,13 @@
             shouldBeEnabled = "No"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
-            filePath = "src/testApp.cpp"
-            timestampString = "407866437.773296"
+            filePath = "src/ObjectTracker.cpp"
+            timestampString = "408561713.591085"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "16"
-            endingLineNumber = "16"
-            landmarkName = "testApp::setup()"
+            startingLineNumber = "86"
+            endingLineNumber = "86"
+            landmarkName = "ObjectTracker::update(ofxCv::ContourFinder&amp; objectFinder, ofxKinect&amp; kinect)"
             landmarkType = "5">
          </BreakpointContent>
       </BreakpointProxy>
