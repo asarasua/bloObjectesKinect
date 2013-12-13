@@ -52,7 +52,7 @@ void testApp::setup() {
     gui.add(drawDetectors.setup("detectors", false));
     gui.add(floorThresholdSlider.setup("floorThreshold", ofVec2f(10, 50), ofVec2f(0, 5), ofVec2f(100, 150)));
     gui.add(handsThresholdSlider.setup("handsThreshold", ofVec2f(51, 100), ofVec2f(0, 5), ofVec2f(100, 200)));
-    gui.add(objectsBlobSize.setup("objectsBlobSize", ofVec2f(1000, 10000), ofVec2f(0, 5), ofVec2f(10000, 20000)));
+    gui.add(objectsBlobSize.setup("objectsBlobSize", ofVec2f(1000, 10000), ofVec2f(0, 5), ofVec2f(10000, 70000)));
     gui.add(handsBlobSize.setup("handsBlobSize", ofVec2f(1000, 10000), ofVec2f(0, 5), ofVec2f(10000, 20000)));
     
     
@@ -103,12 +103,11 @@ void testApp::update() {
         objectsFinder.setMaxArea(objectsBlobSize->y);
         objectsFinder.findContours(objectsImage);
         
-        ObjectTracker().update(objectsFinder, kinect);
-        
         handsFinder.setMinArea(handsBlobSize->x);
         handsFinder.setMaxArea(handsBlobSize->y);
         handsFinder.findContours(handsImage);
         
+        ObjectTracker().update(objectsFinder, handsFinder, kinect);
 	}
 	
 #ifdef USE_TWO_KINECTS

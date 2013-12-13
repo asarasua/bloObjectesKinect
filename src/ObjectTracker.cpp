@@ -10,6 +10,7 @@
 
 Object::Object(float _area){
     area = _area;
+    touched = false;
 }
 
 float Object::getArea(){
@@ -28,8 +29,16 @@ void Object::setCategory(unsigned int _category){
     category = _category;
 }
 
+void Object::setTouched (bool _touched){
+    touched = _touched;
+}
+
+bool Object::isTouched (){
+    return touched;
+}
+
 ObjectTracker::ObjectTracker(){
-    
+    oscSender.setup("localhost", 12345);
 }
 
 //_________________________________________________________________________OSC
@@ -106,7 +115,7 @@ void ObjectTracker::sendBundle() {
 
 //_________________________________________________________________________________
 
-void ObjectTracker::update(ofxCv::ContourFinder& objectFinder, ofxKinect& kinect){
+void ObjectTracker::update(ofxCv::ContourFinder& objectFinder, ofxCv::ContourFinder& handsFinder, ofxKinect& kinect){
     clearBundle();
     for (int i = 0; i < objectFinder.size(); ++i) {
         vector<cv::Point> quads = objectFinder.getFitQuad(i);
@@ -128,13 +137,25 @@ void ObjectTracker::update(ofxCv::ContourFinder& objectFinder, ofxKinect& kinect
             objects[objectFinder.getLabel(i)] = newObject;
         }
         
+        //Check if there's a hand that touches the object
+        objects[objectFinder.getLabel(i)].setTouched(false);
+        int j = 0;
+        while (!objects[objectFinder.getLabel(i)].isTouched() && j < handsFinder.size()) {
+            if (objectFinder.getBoundingRect(i).contains(handsFinder.getCenter(j))) {
+                objects[objectFinder.getLabel(i)].setTouched(true);
+            }
+            ++j;
+        }
+        
         //Choose category
         selectCategory(objectFinder.getLabel(i));
         
         //Send OSC TODO: think about messages format
         addMessage("/Object/label", objectFinder.getLabel(i));
-        addMessage("/Object/category", objects[i].getCategory());
-    }        
+        addMessage("/Object/category", objects[objectFinder.getLabel(i)].getCategory());
+        addMessage("/Object/touched", objects[objectFinder.getLabel(i)].isTouched());
+    }
+    sendBundle();
 }
 
 void ObjectTracker::selectCategory(unsigned int _label){

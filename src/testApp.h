@@ -26,7 +26,7 @@ public:
 	void mouseReleased(int x, int y, int button);
 	void windowResized(int w, int h);
     float distanceToBackground (int kinectX, int kinectY);
-	
+    	
 	ofxKinect kinect;
 	
 #ifdef USE_TWO_KINECTS

@@ -19,6 +19,7 @@ protected:
     //cv::Point2f center;
     float area;
     unsigned int category;
+    bool touched;
 public:
     Object(){};
     Object(float Area);
@@ -30,12 +31,15 @@ public:
     
     void setCategory (unsigned int _category);
     unsigned int getCategory();
+    
+    void setTouched (bool _touched);
+    bool isTouched ();
 };
 
 class ObjectTracker{
 public:
     ObjectTracker();
-    void update(ofxCv::ContourFinder& objectFinder, ofxKinect& kinect);
+    void update(ofxCv::ContourFinder& objectFinder, ofxCv::ContourFinder& handsFinder, ofxKinect& kinect);
  
 private:
     void clearBundle();
@@ -49,6 +53,7 @@ private:
     
     ofxOscSender oscSender;
     ofxOscBundle bundle;
+    
 };
 
 #endif
